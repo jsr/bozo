@@ -15,6 +15,5 @@ Category.create(:name => 'Announce')
 
 Status.create(:name => 'Open')
 Status.create(:name => 'Closed')
-Status.create(:name => 'Thanks')
 
 
