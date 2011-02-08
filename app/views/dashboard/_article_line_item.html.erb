@@ -5,7 +5,7 @@
 
   <td width="13%"><%= l(article.link_time, :format => :short_datetime) %></td>
   <td width="12%"><%= article.author %></td>
-  <td width="40%"><%= link_to_if (not article.url.nil?), article.subject, "http://groups.google.com" + (article.url || "")%></td>
+  <td width="40%"><%= link_to_if (not article.url.nil?), article.subject, article.domain + (article.url || "")%></td>
   <td width="5%"><%= article.replies %></td>
   <td width="10%">
     <% if user_signed_in? %>

@@ -17,6 +17,7 @@ class Article
   key :status_id,     ObjectId
                       
   key :thread,        String
+  key :domain,        String
   key :url,           String
   key :author,        String
   key :replies,       Integer
