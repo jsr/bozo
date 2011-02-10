@@ -795,6 +795,8 @@ table.simple-nb { text-align: left; width: auto; }
 table.simple-nb th, 
 table.simple-nb td { padding:3px 12px 3px 0 }
 
+table.compact-nb th,
+table.compact-nb td,
 table.compact-b th,
 table.compact-b td { padding-left:4px; padding-right:4px; }
 

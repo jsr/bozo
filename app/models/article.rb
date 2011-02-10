@@ -12,21 +12,22 @@ class Article
   belongs_to :status
   
   # Attributes
-  key :user_id,       ObjectId
-  key :category_id,   ObjectId
-  key :status_id,     ObjectId
-                      
-  key :thread,        String
-  key :domain,        String
-  key :url,           String
-  key :author,        String
-  key :replies,       Integer
-  key :authors        
-  key :link_time,     Time  
-  key :subject,       String
-  key :time_assigned, Time 
-  key :time_closed,   Time 
-  key :first_response,Time 
+  key :user_id,           ObjectId
+  key :category_id,       ObjectId
+  key :status_id,         ObjectId
+                          
+  key :thread,            String
+  key :domain,            String
+  key :url,               String
+  key :author,            String
+  key :replies,           Integer
+  key :authors            
+  key :link_time,         Time  
+  key :subject,           String
+  key :time_assigned,     Time 
+  key :time_closed,       Time 
+  key :first_response,    Time 
+  key :last_responded_by, String 
   timestamps!
   
   # Cached values

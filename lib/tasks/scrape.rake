@@ -59,11 +59,10 @@ namespace :scrape do
           article.status = open_status  # re-open a closed issue, if reply count has changed
         end         
         
-        article.replies   = replies
         article.authors   = num_authors
         
-        # set response times
-        if article.link_time.nil? or article.first_response.nil? 
+        # set authors and response times
+        if article.link_time.nil? or article.first_response.nil? or article.replies != replies
           user_response_time_map = {}
           response_doc = Nokogiri::HTML(open(article.domain + (url || "")).read)
           
@@ -80,14 +79,19 @@ namespace :scrape do
             author = author_span && author_span.inner_text
             user_response_time_map[Time.zone.parse(response_time.gsub("&nbsp;",""))] = author if response_time 
           end
-          
+
+          # set article submission time and first response
           response_times = user_response_time_map.keys.sort!
           article.link_time ||= response_times[0]
           article.first_response ||= response_times[1]
-          
+
+          # set author and last-responded-by
           article.author = (user_response_time_map[response_times[0]] || "<no user found?>").strip
+
+          article.last_responded_by = (replies > 0) ? user_response_time_map[response_times.last] : nil
         end
         
+        article.replies   = replies
         update_article(article, send_alerts)
       end
     end
@@ -145,12 +149,10 @@ namespace :scrape do
 
       if article.replies != replies and article.status_id = closed_status.id     
         article.status = open_status  # re-open a closed issue, if reply count has changed
-      end         
-      
-      article.replies = replies
-      
+      end
+
       # set authors and response times
-      if article.link_time.nil? or article.first_response.nil? or article.replies != replies 
+      if article.link_time.nil? or article.first_response.nil? or article.replies != replies
         user_response_time_map = {}
         
         answers_doc = open("#{url_prefix}#{question["question_answers_url"]}?&#{sof_key}").read
@@ -166,11 +168,14 @@ namespace :scrape do
         article.link_time = Time.zone.at(question["creation_date"])
         article.author = question["owner"]["display_name"]
         
-        # set first response time and total number of users who answered
-        response_times          = user_response_time_map.keys.sort!        
-        article.first_response  ||= response_times.first
-        article.authors         = (user_response_time_map.values + [article.author]).uniq.size
+        # set first response time, last-user-responded and total number of users who answered
+        response_times            = user_response_time_map.keys.sort!        
+        article.first_response    ||= response_times.first
+        article.last_responded_by = (replies > 0) ? user_response_time_map[response_times.last] : nil
+        article.authors           = (user_response_time_map.values + [article.author]).uniq.size
       end
+      
+      article.replies = replies
        
       update_article(article, send_alerts)        
     end
