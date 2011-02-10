@@ -102,30 +102,27 @@ namespace :scrape do
   desc "Scrape the stackoverflow page (tagged with mongodb) for new threads"
   task :stackoverflow => :environment do
     
+    sof_key = "key=#{SETTINGS_10GEN[:sof_key] || ""}"
+    url_prefix = "http://api.stackoverflow.com/1.0"
     Time.zone = 'Pacific Time (US & Canada)'
     
     open_status = Status.find_by_name("Open")
     closed_status = Status.find_by_name("Closed")
     
-    # get and process the stackoverflow page. 
-    snippet = open("http://stackoverflow.com/questions/tagged/mongodb?sort=active&pagesize=30").read
-    doc     = Nokogiri::HTML(snippet)
+    # get and process the stackoverflow page.
+    snippet = open("#{url_prefix}/search?tagged=mongodb&sort=activity&pagesize=30&#{sof_key}").read
+    doc = JSON.parse(Zlib::GzipReader.new(StringIO.new(snippet)).read)
+    
+    questions = doc["questions"]
+    questions.each_with_index do |question, index|
 
-    doc.css("#questions .question-summary").each_with_index do |question_summary_div, index|
-      summary         = question_summary_div.at_css(".summary")
-      statscontainer  = question_summary_div.at_css(".statscontainer")
-
-      subject_link = summary.at_css("h3 a")
-      subject = subject_link.inner_text.strip
-      url = subject_link.get_attribute('href')
-      thread      = url.match(/^\/questions\/(\w+)/) && $1
-                  
-      replies_elm = statscontainer.at_css(".status strong")
-      replies = (replies_elm && replies_elm.inner_text).to_i
-
+      subject     = question["title"]
+      thread      = question["question_id"].to_s 
+      url         = "/questions/#{thread}"
+      replies     = question["answer_count"]
       send_alerts = false
 
-      article = Article.where(:thread => thread).first
+      article = Article.find_by_thread(thread)
       
       if (not article.nil?) # check if article already in collection
         puts "[exists] #{index + 1}\t #{thread}\t #{subject[0,40]}...\n"
@@ -155,24 +152,20 @@ namespace :scrape do
       # set authors and response times
       if article.link_time.nil? or article.first_response.nil? or article.replies != replies 
         user_response_time_map = {}
-        response_doc = Nokogiri::HTML(open(article.domain + (url || "")).read)
         
-        # get all answer times and author names
-        response_doc.css("#answers .answer .user-info").each do |info|
-          author_elm = info.at_css(".user-details a")
-          if author_elm
-            author = author_elm.inner_text.strip                     
-            response_time = info.at_css(".user-action-time span").get_attribute("title")
-            
-            user_response_time_map[Time.zone.parse(response_time.gsub("&nbsp;",""))] = author if response_time 
-          end
-        end
+        answers_doc = open("#{url_prefix}#{question["question_answers_url"]}?&#{sof_key}").read
+        answers = JSON.parse(Zlib::GzipReader.new(StringIO.new(answers_doc)).read)["answers"]
+        
+       answers.each do |answer|
+         author = answer["owner"]["display_name"]
+         response_time = Time.zone.at(answer["creation_date"])
+         user_response_time_map[response_time] = author if response_time
+       end 
         
         # set article submission time and author name
-        author_link       = response_doc.at_css("#question .user-info .user-details a")                
-        article.author    = (author_link && author_link.inner_text.strip) || "<no user found?>"
-        article.link_time = author_link && author_link.parent.parent.at_css(".user-action-time span").get_attribute("title")
-
+        article.link_time = Time.zone.at(question["creation_date"])
+        article.author = question["owner"]["display_name"]
+        
         # set first response time and total number of users who answered
         response_times          = user_response_time_map.keys.sort!        
         article.first_response  ||= response_times.first
