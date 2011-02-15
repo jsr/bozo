@@ -178,11 +178,16 @@ class StatsController < ApplicationController
     # map the articles open/close counts to respective user 
     @user_stat_map = {}
     x.each do |article|
-      user_stat = (@user_stat_map[article.user_nickname] ||= {})
+      user_nickname = article.user_nickname
+      if user_nickname.blank?
+        next
+      end
+      user_stat = (@user_stat_map[user_nickname] ||= {})
       
       (@start_of_month.to_date..@end_of_month.to_date).each do |date|
         date_stat = (user_stat[date] ||= {})
-        if date <= ((article.time_closed && article.time_closed.to_date) || @current_date) and (date >= article.time_assigned.to_date)
+        if (date <= ((article.time_closed && article.time_closed.to_date) || @current_date)) and 
+           (date >= ((article.time_assigned && article.time_assigned.to_date) || @current_date - 1))
           date_stat[:open] = (date_stat[:open] ||= 0) + 1
         else
           date_stat[:open] ||= 0
