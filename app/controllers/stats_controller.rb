@@ -32,13 +32,13 @@ class StatsController < ApplicationController
     })
 
     @current_date   = Time.zone.today
-    start_of_month  = @current_date.advance(:months => -11).beginning_of_month.beginning_of_day.utc
-    end_of_month    = @current_date.end_of_month.end_of_day.utc
+    start_of_month  = @current_date.advance(:months => -11).beginning_of_month.beginning_of_day
+    end_of_month    = @current_date.end_of_month.end_of_day
     
     MongoMapper.database['mr_incoming_by_day'].drop() # remove temp collection for map_reduce
     x = Article.collection.map_reduce(map_function, reduce_function,
                                       { :out => 'mr_incoming_by_day',
-                                        :query => {:link_time => {"$gte" => start_of_month, "$lte" => end_of_month}}}).find().to_a
+                                        :query => {:link_time => {"$gte" => start_of_month.utc, "$lte" => end_of_month.utc}}}).find().to_a
     
     set_monthly_stats(x)
   end
@@ -67,13 +67,13 @@ class StatsController < ApplicationController
     })
 
     @current_date   = Time.zone.today
-    start_of_month  = @current_date.advance(:months => -11).beginning_of_month.beginning_of_day.utc
-    end_of_month    = @current_date.end_of_month.end_of_day.utc
+    start_of_month  = @current_date.advance(:months => -11).beginning_of_month.beginning_of_day
+    end_of_month    = @current_date.end_of_month.end_of_day
     
     MongoMapper.database['mr_closed_by_day'].drop() # remove temp collection for map_reduce
     x = Article.collection.map_reduce(map_function, reduce_function,
                                       { :out => 'mr_closed_by_day',
-                                        :query => { :link_time => {"$gte" => start_of_month, "$lte" => end_of_month},
+                                        :query => { :link_time => {"$gte" => start_of_month.utc, "$lte" => end_of_month.utc},
                                                     :status_id  => closed_status.id}}).find().to_a
 
     set_monthly_stats(x)
@@ -84,9 +84,9 @@ class StatsController < ApplicationController
   #
   def incoming_by_hour
     @current_date   = Time.zone.today
-    start_date      = (@current_date - @current_date.wday).beginning_of_day.utc
-    end_date        = (@current_date - @current_date.wday + 6).end_of_day.utc
-    articles        = Article.where({:link_time => {"$gte" => start_date, "$lte" => end_date}}).all
+    start_date      = (@current_date - @current_date.wday).beginning_of_day
+    end_date        = (@current_date - @current_date.wday + 6).end_of_day
+    articles        = Article.where({:link_time => {"$gte" => start_date.utc, "$lte" => end_date.utc}}).all
 
     @day_stats = []
 
@@ -147,19 +147,55 @@ class StatsController < ApplicationController
     })
 
     @current_date   = Time.zone.today
-      start_of_month  = @current_date.advance(:months => -11).beginning_of_month.beginning_of_day.utc
-    end_of_month    = @current_date.end_of_month.end_of_day.utc
+    start_of_month  = @current_date.advance(:months => -11).beginning_of_month.beginning_of_day
+    end_of_month    = @current_date.end_of_month.end_of_day
     
     MongoMapper.database['mr_close_time_by_day'].drop() # remove temp collection for map_reduce
     x = Article.collection.map_reduce(map_function, reduce_function,
                                       { :out => 'mr_close_time_by_day',
-                                        :query => { :link_time => {"$gte" => start_of_month, "$lte" => end_of_month},
+                                        :query => { :link_time => {"$gte" => start_of_month.utc, "$lte" => end_of_month.utc},
                                                     :status_id  => closed_status.id}}).find().to_a
 
     set_monthly_stats(x)
   end
   
   
+  #
+  #
+  #
+  def open_close_by_users
+    open_status   = Status.find_by_name('Open')
+    closed_status = Status.find_by_name('Closed')
+    
+    @current_date   = Time.zone.today
+    @start_of_month  = (@current_date -30).beginning_of_day
+    @end_of_month    = @current_date.end_of_day
+
+    # get all open & assigned articles + all closed articles that were closed in last 30 days 
+    x = Article.where( "$or" => [{ "status_id" => open_status.id, "user_id" => {"$ne" => nil} }, 
+                                 { "status_id" => closed_status.id, "time_closed" => {"$gte" => @start_of_month.utc} }]).all
+    
+    # map the articles open/close counts to respective user 
+    @user_stat_map = {}
+    x.each do |article|
+      user_stat = (@user_stat_map[article.user_nickname] ||= {})
+      
+      (@start_of_month.to_date..@end_of_month.to_date).each do |date|
+        date_stat = (user_stat[date] ||= {})
+        if date <= ((article.time_closed && article.time_closed.to_date) || @current_date) and (date >= article.time_assigned.to_date)
+          date_stat[:open] = (date_stat[:open] ||= 0) + 1
+        else
+          date_stat[:open] ||= 0
+        end
+      end
+      
+      if article.time_closed
+        date_stat = user_stat[article.time_closed.to_date] ||= {}
+        date_stat[:closed] = (date_stat[:closed] ||= 0) + 1
+      end
+    end # article loop
+    
+  end # of method 'open_close_by_users' 
   
   
   #\\\\\\\\\\\\\\\\\\\

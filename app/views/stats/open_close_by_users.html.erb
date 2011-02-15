@@ -1,0 +1,45 @@
+<h2>Open / Close rate in last 30 days</h2>
+<br/>
+
+<% dates = (@start_of_month.to_date..@end_of_month.to_date).to_a.reverse %>
+
+<table class="compact-b">
+  <thead style="font-size: 85%">
+    <tr>
+      <th>Engineers</th>
+      <th>Status</th>
+      <% dates.each do |date| %>
+        <th>
+          <%= l(date, :format => :mon_and_mday) %>
+        </th>
+      <% end %>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td colspan="<%= dates.size + 2 %>"></td>
+    </tr>
+    <% @user_stat_map.keys.each_with_index do |user, index| %>
+      <% 
+         stats = @user_stat_map[user] 
+         row_class = (index%2 == 0 ? "even" : "odd") 
+      %>
+      <tr class="<%= row_class %>">
+        <td><%= user %></td>
+        <td>open</td>
+        <% dates.each do |date| %>
+          <% count = (stats[date] || {})[:open] %>
+          <td><%= (count == 0 or count.nil?) ? '---' : count %></td>
+        <% end %>
+      </tr>
+      <tr class="<%= row_class %>">
+        <td></td>
+        <td>closed</td>
+        <% dates.each do |date| %>
+          <% count = (stats[date] || {})[:closed] %>
+          <td><%= (count == 0 or count.nil?)  ? '---' : count %></td>
+        <% end %>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

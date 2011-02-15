@@ -9,6 +9,7 @@ Bozo::Application.routes.draw do
   
   resources :stats do 
     collection do
+      get :open_close_by_users
       get :incoming_by_day
       get :closed_by_day
       get :incoming_by_hour
