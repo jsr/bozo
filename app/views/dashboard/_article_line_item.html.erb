@@ -2,13 +2,16 @@
 <% row_class ||= "odd" %>
 
 <tr id="article-<%= article.id -%>" class="<%= row_class -%>" align="left">
+  <% source_icon = (article.domain == "http://stackoverflow.com") ? '/images/stackoverflow_16.png' :
+                        (article.domain == "http://groups.google.com" ? '/images/google_16.png' : "")-%>
 
+  <th width="2%"><%= image_tag  source_icon %></th>
   <td width="12%"><%= l(article.link_time, :format => :short_datetime) %></td>
   <td width="12%"><%= truncate(article.author, :length => 16) %></td>
-  <td width="35%"><%= link_to_if (not article.url.nil?), article.subject, article.domain + (article.url || "")%></td>
+  <td width="34%"><%= link_to_if (not article.url.nil?), article.subject, article.domain + (article.url || "")%></td>
   <td width="3%"><%= article.replies %></td>
   <td width="12%"><%= truncate(article.last_responded_by || "---", :length => 16) %></td>
-  <td width="8%">
+  <td width="7%">
     <% if user_signed_in? %>
       <%= select("article", "category_id", options_for_select(@categories.collect { |p| [p.name, p.id] }, article.category_id),
                  {:prompt => '---'}, 
