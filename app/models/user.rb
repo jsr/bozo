@@ -2,17 +2,18 @@
 #
 #
 class User
-  include MongoMapper::Document  
+  include MongoMapper::Document
   plugin MongoMapper::Devise
-    
-  # Include default devise modules. Others available are:
-  # :token_authenticatable, :confirmable, :lockable and :timeoutable
-  devise :database_authenticatable, :registerable,
-         :recoverable, :rememberable, :trackable, :validatable
 
   # Setup accessible (or protected) attributes for your model
   attr_accessible :email, :password, :password_confirmation, :remember_me
-    
+
+  # Include default devise modules. Others available are:
+  # :token_authenticatable, :confirmable, :lockable and :timeoutable
+  devise :database_authenticatable, :recoverable, :rememberable, :trackable, :validatable
+
+  has_many :authentications, :dependent => :destroy
+
   # Attributes
   key :email,                 String
   key :encrypted_password,    String
@@ -35,14 +36,41 @@ class User
   key :nick,                  String
   key :sms_address,           String
   timestamps!
-  
+
   # Validations
-  REG_EMAIL_NAME   = '[\w\.%\+\-]+'
-  REG_DOMAIN_HEAD  = '(?:[A-Z0-9\-]+\.)+'
-  REG_DOMAIN_TLD   = '(?:[A-Z]{2}|com|org|net|gov|mil|biz|info)'
-  REG_EMAIL_OK     = /\A#{REG_EMAIL_NAME}@#{REG_DOMAIN_HEAD}#{REG_DOMAIN_TLD}\z/i
-  
+  REG_EMAIL_NAME  = '[\w\.%\+\-]+'
+  REG_DOMAIN_HEAD = '(?:[A-Z0-9\-]+\.)+'
+  REG_DOMAIN_TLD  = '(?:[A-Z]{2}|com|org|net|gov|mil|biz|info)'
+  REG_EMAIL_OK    = /\A#{REG_EMAIL_NAME}@#{REG_DOMAIN_HEAD}#{REG_DOMAIN_TLD}\z/i
+
   validates_length_of :email, :within => 6..100, :allow_blank => true
 #  validates_format_of :email, :with => REG_EMAIL_OK, :allow_blank => true
-  
+
+
+  #
+  #
+  #
+  def apply_omniauth(omniauth)
+    self.email = omniauth['user_info']['email'] if email.blank?
+
+    if nick.blank?
+      self.nick = (omniauth['user_info']['first_name'] || omniauth['user_info']['nickname'] ||
+                   omniauth['user_info']['name'] ||omniauth['user_info']['email'])
+    end
+
+    self.email_alert = false
+    self.sms_alert = false
+    self.weekend = false
+
+    authentications.build(:provider => omniauth['provider'], :uid => omniauth['uid'])
+  end
+
+  #
+  #
+  #
+  def password_required?
+    (authentications.empty? || !password.blank?) && super
+  end
+
+
 end # of class

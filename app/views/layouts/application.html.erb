@@ -18,8 +18,9 @@
     <%= render 'layouts/header' %>
     <br/>
 
-    <p class="notice"><%= notice %></p>
-    <p class="alert"><%= alert %></p>
+    <p class="notice"><%= notice || flash[:notice] %> </p>
+    <p class="error"><%= flash[:error] %> </p>
+    <p class="warning"><%= flash[:warning] %> </p>
 
     <%= yield %>
 

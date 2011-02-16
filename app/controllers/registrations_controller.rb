@@ -1,18 +1,42 @@
-class RegistrationsController < Devise::RegistrationsController
+#
+#
+#
+class RegistrationsController
+
+  #
+  #
+  #
   def new
     super
   end
 
+  #
+  #
+  #
   def create
     super
-    @user.nick = params[:user][:nick]
-    @user.email_alert = false
-    @user.sms_alert = false
-    @user.weekend = false
-    @user.save
+    session[:omniauth] = nil unless @user.new_record?
   end
 
+  #
+  #
+  #
   def update
     super
+  end
+
+
+  #\\\\\\\\\\\\\\\\\\\\\\\\\\\
+  private
+
+  #
+  #
+  #
+  def build_resource(*args)
+    super
+    if session[:omniauth]
+      @user.apply_omniauth(session[:omniauth])
+      @user.valid?
+    end
   end
 end 

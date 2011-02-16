@@ -1,12 +1,18 @@
 Bozo::Application.routes.draw do
-  devise_for :users, :controllers => {:registrations => "registrations"}
-  
+
+  match '/auth/:provider/callback' => 'authentications#create'
+  match '/users/sign_in' => 'authentications#index'
+
+#  devise_for :users, :controllers => {:registrations => "registrations"}
+  devise_for :users
+
   root :to => "dashboard#index"
   
   resources :users
   resources :articles
   resources :categories
-  
+  resources :authentications
+
   resources :stats do 
     collection do
       get :open_close_by_users

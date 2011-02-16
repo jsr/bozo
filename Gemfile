@@ -16,6 +16,8 @@ gem 'mongo'
 gem 'mongo_ext'
 gem 'bson'
 gem 'bson_ext'
+gem 'omniauth'
+gem 'mongrel', '1.2.0.pre2'
 
 gem 'mongo_mapper', :git => 'git://github.com/jnunemaker/mongomapper.git', :branch => 'rails3'
 gem 'devise-mongo_mapper', :git => 'git://github.com/collectiveidea/devise-mongo_mapper.git'
