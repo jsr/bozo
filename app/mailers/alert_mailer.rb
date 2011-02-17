@@ -7,7 +7,8 @@ class AlertMailer < ActionMailer::Base
   #
   #
   #
-  def email_new_thread(thread, subject)
+  def email_new_thread(author, thread, subject)
+    @author = author
     @thread = thread  # used in alert_mailer view code
     
     subject = subject
@@ -30,9 +31,10 @@ class AlertMailer < ActionMailer::Base
   #
   #
   #
-  def email_new_thread_assigned(user, article)
-
+  def email_new_thread_assigned(assigned_by_user, user, article)
     @article = article
+    @assigned_by = assigned_by_user.nick
+
     if not user.email.empty?
       mail(:to => user.email, :subject => "new thread assigned")
       logger.info "[end] emails sent!"

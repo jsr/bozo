@@ -21,8 +21,8 @@ class ArticlesController < ApplicationController
     
     if params[:user_id] != "-1"
       user = User.find(params[:user_id])
-      if user
-        AlertMailer.email_new_thread_assigned(user, @article).deliver
+      if user && (current_user != user)
+        AlertMailer.email_new_thread_assigned(current_user, user, @article).deliver
       end
       @article.user_id       = user && user.id
       @article.user_nickname = user && user.nick      

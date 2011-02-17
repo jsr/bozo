@@ -195,7 +195,7 @@ namespace :scrape do
         puts "[alerts] \t sending..."
         thread_url = article.domain + (article.url || "")
         
-        AlertMailer.email_new_thread(thread_url, article.subject).deliver
+        AlertMailer.email_new_thread(article.author, thread_url, article.subject).deliver
         AlertMailer.sms_new_thread(thread_url, article.subject).deliver
       end
     rescue Exception => e
