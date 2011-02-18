@@ -6,9 +6,10 @@
 <%= render :partial => "/dashboard/article_update_form" %>
 
 <h3>Articles without a reply, not closed</h3>
-<% if not @articles_no_reply.empty? %>
-  <table>
-    <thead>
+
+<table id="articles-without-reply-and-not-closed">
+  <thead>
+    <% if not @articles_no_reply.empty? %>
       <tr align="left">
         <th></th>
         <th>date</th>
@@ -20,20 +21,24 @@
         <th>assigned</th>
         <th>status</th>
       </tr>
-    </thead>
-
+    <% end %>
+  </thead>
+  <tbody>
     <% @articles_no_reply.each_with_index do |a, i| %>
       <%= render :partial => "/dashboard/article_line_item", :locals => {:article => a, :row_class => (i%2 == 0 ? "even" : "odd")} %>
     <% end %>
-  </table>
-<% else %>
-  <div class="hint" style="font-style: italic;">empty!</div>    
-<% end %>
+
+    <% if @articles_no_reply.empty? %>
+      <tr class="hint empty" style="font-style: italic;"><td style="text-align:left">empty!</td></tr>
+    <% end %>
+  </tbody>
+</table>
+
 
 <h3>Open issues</h3>
-<% if not @articles.empty? %>
-  <table>
-    <thead>
+<table id="open-articles">
+  <thead>
+    <% if not @articles.empty? %>
       <tr align="left">
         <th></th>
         <th>date</th>
@@ -45,40 +50,49 @@
         <th>assigned</th>
         <th>status</th>
       </tr>
-    </thead>
+    <% end %>
+  </thead>
+  <tbody>
     <% @articles.each_with_index do |a, i| %>
       <%= render :partial => "/dashboard/article_line_item", :locals => {:article => a, :row_class => (i%2 == 0 ? "even" : "odd")} %>
     <% end %>
-  </table>
-<% else %>
-  <div class="hint" style="font-style: italic;">empty!</div>  
-<% end %>
+
+    <% if @articles.empty? %>
+      <tr class="hint empty" style="font-style: italic;"><td style="text-align:left">empty!</td></tr>
+    <% end %>
+  </tbody>
+</table>
+
 
 
 <h3>Closed issues</h3>
-<% if not @closed_articles.empty? %>
-  <table>
-    <thead>
-      <tr align="left">
-        <th></th>
-        <th>date</th>
-        <th>Author</th>
-        <th>Subject</th>
-        <th>#r</th>
-        <th>last</th>
-        <th>type</th>
-        <th>assigned</th>
-        <th>status</th>
-      </tr>
-    </thead>
+<table id="closed-articles">
+  <thead>
+  <% if not @closed_articles.empty? %>
+    <tr align="left">
+      <th></th>
+      <th>date</th>
+      <th>Author</th>
+      <th>Subject</th>
+      <th>#r</th>
+      <th>last</th>
+      <th>type</th>
+      <th>assigned</th>
+      <th>status</th>
+    </tr>
+  <% end %>
+  </thead>
+  <tbody>
     <% @closed_articles.each_with_index do |a, i| %>
       <%= render :partial => "/dashboard/article_line_item", :locals => {:article => a, :row_class => (i%2 == 0 ? "even" : "odd")} %>
     <% end %>
-  </table>
-  <br/>
-  
-  <%= will_paginate @closed_articles %>
-<% else %>
-  <div class="hint" style="font-style: italic;">empty!</div>      
-<% end %>
+
+    <% if @closed_articles.empty? %>
+      <tr class="hint empty" style="font-style: italic;"><td style="text-align:left">empty!</td></tr>
+    <% end %>
+  </tbody>
+</table>
+<br/>
+
+<%= will_paginate @closed_articles %>
 

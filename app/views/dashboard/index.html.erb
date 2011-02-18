@@ -5,9 +5,10 @@
 <% @page_auto_refresh = (params[:page].to_i <= 1) %>
 
 <h3>Articles without a reply, not closed</h3>
-<% if !@articles_no_reply.empty? %>
-  <table>
-    <thead>
+
+<table id="articles-without-reply-and-not-closed">
+  <thead>
+    <% if !@articles_no_reply.empty? %>
       <tr align="left">
         <th></th>
         <th>date</th>
@@ -19,23 +20,25 @@
         <th>assigned</th>
         <th>status</th>
       </tr>
-    </thead>
-    <tbody>
-      <% @articles_no_reply.each_with_index do |a, i| %>
-        <%= render :partial => "/dashboard/article_line_item", :locals => { :article => a, :row_class => (i%2 == 0 ? "even" : "odd") } %>        
-      <% end %>
-    </tbody>
-  </table>
-  <br/>
-  
-  <%= will_paginate @articles_no_reply %>
+    <% end %>
+  </thead>
+  <tbody>
+    <% @articles_no_reply.each_with_index do |a, i| %>
+      <%= render :partial => "/dashboard/article_line_item", :locals => { :article => a, :row_class => (i%2 == 0 ? "even" : "odd") } %>
+    <% end %>
 
-<% else %>
-  <div class="hint" style="font-style: italic;">empty!</div>
-<% end %>
+    <% if @articles_no_reply.empty? %>
+      <tr class="hint" style="font-style: italic;"><td style="text-align:left">empty!</td></tr>
+    <% end %>
+  </tbody>
+</table>
+<br/>
+
+<%= will_paginate @articles_no_reply %>
+
 
 <h3>Open issues</h3>
-<table>
+<table id="open-articles">
   <thead>
     <tr align="left">
       <th></th>

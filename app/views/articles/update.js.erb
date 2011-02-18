@@ -5,6 +5,25 @@ article.effect('highlight', {}, 400);
 <% if @article.status_name == 'Closed' %>
   article.fadeOut('slow', function() {
     $(this).remove();
+    var closedTable = $('#closed-articles tbody');
+    if (closedTable != null) {
+      closedTable.children(".empty").hide();
+      closedTable.prepend(article);
+      article.effect('highlight', {}, 400);
+    }
   });
-<% end %>
 
+<% elsif (@article.status_name == 'Open' || @article.status_name == nil) %>
+  var parentTable = article.parents("table");
+  var targetTableBody = $('#<%= (@article.replies == 0) ? "articles-without-reply-and-not-closed" : "open-articles" %> tbody');
+  var targetTable = $('#<%= (@article.replies == 0) ? "articles-without-reply-and-not-closed" : "open-articles" %> tbody').parents("table");
+
+  if ((targetTableBody != null) && (parentTable.attr("id") != targetTable.attr("id"))) {
+    article.fadeOut('slow', function() {
+      $(this).remove();
+      targetTableBody.prepend(article);
+      article.effect('highlight', {}, 400);
+    });
+  }
+
+<% end %>
