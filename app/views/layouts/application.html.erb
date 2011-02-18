@@ -12,7 +12,7 @@
     <% if @page_auto_refresh  %>
       <script type="text/javascript">
         $(document).ready(function() {
-          setInterval("TENGEN.util.Doc.reloadPage(true)", 30000);
+          setInterval("TENGEN.util.Doc.reloadPage(true)", 60000);
         });
       </script>
     <% end %>

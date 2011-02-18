@@ -55,10 +55,6 @@ namespace :scrape do
           article.created_at = Time.now
         end
 
-        if article.replies != replies and article.status_id = closed_status.id     
-          article.status = open_status  # re-open a closed issue, if reply count has changed
-        end         
-        
         article.authors   = num_authors
         
         # set authors and response times
@@ -90,6 +86,14 @@ namespace :scrape do
 
           article.last_responded_by = (replies > 0) ? user_response_time_map[response_times.last] : nil
         end
+
+        # re-open a closed issue, if reply count has changed, and the last response was not from 10gen support
+        if article.replies != replies and article.status_id = closed_status.id
+          if not (SETTINGS_10GEN["support_staff_names"] || []).include? article.last_responded_by
+            article.status = open_status
+            article.status_name = open_status.name
+          end
+        end
         
         article.replies   = replies
         update_article(article, send_alerts)
@@ -106,7 +110,7 @@ namespace :scrape do
   desc "Scrape the stackoverflow page (tagged with mongodb) for new threads"
   task :stackoverflow => :environment do
     
-    sof_key = "key=#{SETTINGS_10GEN[:sof_key] || ""}"
+    sof_key = "key=#{SETTINGS_10GEN["sof_key"] || ""}"
     url_prefix = "http://api.stackoverflow.com/1.0"
     Time.zone = 'Pacific Time (US & Canada)'
     
@@ -147,10 +151,6 @@ namespace :scrape do
         article.created_at = Time.now
       end
 
-      if article.replies != replies and article.status_id = closed_status.id     
-        article.status = open_status  # re-open a closed issue, if reply count has changed
-      end
-
       # set authors and response times
       if article.link_time.nil? or article.first_response.nil? or article.replies != replies
         user_response_time_map = {}
@@ -173,6 +173,14 @@ namespace :scrape do
         article.first_response    ||= response_times.first
         article.last_responded_by = (replies > 0) ? user_response_time_map[response_times.last] : nil
         article.authors           = (user_response_time_map.values + [article.author]).uniq.size
+      end
+
+      # re-open a closed issue, if reply count has changed, and the last response was not from 10gen support
+      if article.replies != replies and article.status_id = closed_status.id
+        if not (SETTINGS_10GEN["support_staff_names"] || []).include? article.last_responded_by
+          article.status = open_status
+          article.status_name = open_status.name
+        end
       end
       
       article.replies = replies

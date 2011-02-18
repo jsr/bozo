@@ -1,2 +1,6 @@
 # Key for the Stackoverflow API (only needed in production env.)
-sof_key: 
+sof_key:
+
+support_staff_names: # used while auto-reopening issues if last response is not by support
+#  - Homer Simpson
+#  - Bart Simpson
